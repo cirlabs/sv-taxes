@@ -59,8 +59,6 @@
         <script type="text/javascript" src="https://raw.github.com/documentcloud/underscore/master/underscore-min.js"></script>
         <script type="text/javascript" src="https://raw.github.com/mbostock/d3/master/d3.v2.min.js"></script>
         <script type="text/javascript" src="https://raw.github.com/shaneshifflett/responsible-chartz/master/chartz.js"></script>
-
-
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
             var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
@@ -69,7 +67,19 @@
             s.parentNode.insertBefore(g,s)}(document,'script'));
         </script>
         <script>
+            var ADD_COMMAS = function(value){
+                nStr = value.toString() + '';
+                x = nStr.split('.');
+                x1 = x[0];
+                x2 = x.length > 1 ? '.' + x[1] : '';
+                var rgx = /(\d+)(\d{3})/;
+                while (rgx.test(x1)) {
+                    x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                }
+                return x1 + x2;
+            }; 
             d3.csv("data/sv-top-50.csv", function(data, error) {
+                var infoTemplate = _.template($("#info-window-template").html());
                 var keyval = [];
                 var options = {
                     key: function(entry){return entry.key;},
@@ -119,6 +129,12 @@
                     .style('visibility', 'hidden');
 
                 pack.svg.selectAll("rect").on('mouseover', function(d, i){
+                    console.log(d);
+                    var variables = {
+                        'company': options.KEY(d),
+                        'value': options.VAL(d)
+                    }
+                    $("#info-window").html(infoTemplate(variables));
                     d3.select(this).transition().duration(100)
                     .style("stroke","black")
                     .style("stroke-width","1");
@@ -161,7 +177,8 @@
                         var obj = _.find(keyval, function(y){
                             return options.KEY(d) === options.KEY(y);
                         });
-                        if(options.VAL(obj) == -1)
+                        d.value = options.VAL(obj);
+                        if(options.VAL(obj) <= 0.0)
                             return 0;
                         return dim.yscale(options.VAL(obj));
                     })
@@ -174,6 +191,12 @@
                     return false;
                 });
             });
+        </script>
+        <script type="text/template" id="info-window-template">
+            <ul>
+                <li><%= company %></li>
+                <li><%= value %></li>
+            </ul>
         </script>
     </body>
 </html>
