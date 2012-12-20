@@ -16,6 +16,21 @@
         <link rel="stylesheet" href="css/main.css">
         <link rel="https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.css">
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+        <style type="text/css">
+            #chart{
+                width: 900px;
+                height: 500px;
+            }
+            .y-axis path,
+            .y-axis line {
+              fill: none;
+              stroke: #000;
+              shape-rendering: crispEdges;
+            }
+            body{
+                padding: 25px;
+            }
+        </style>
 
     </head>
     <body>
@@ -23,9 +38,19 @@
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
 
-        <!-- Add your site or application content here -->
-        <p>Hello world! This is HTML5 Boilerplate.</p>
-
+        <div id="info-window"></div>
+        <div id="chart"></div>
+        <div class="controls">
+            <a href="#" id="cash.on.hand">Cash on hand</a>
+            <a href="#" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
+            <a href="#" id="pct.offshore">Percent offshore</a>
+            <a href="#" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
+            <a href="#" id="income.before.taxes">Income before taxes</a>
+            <a href="#" id="effective.tax.rate">Effective tax rate</a>
+            <a href="#" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
+            <a href="#" id="num.tax.havens">Number of tax havens</a>
+        </div>
+        </div>
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
         <script type="text/javascript" src="js/plugins.js"></script>
@@ -33,6 +58,8 @@
         <script type="text/javascript" src="https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js"></script>
         <script type="text/javascript" src="https://raw.github.com/documentcloud/underscore/master/underscore-min.js"></script>
         <script type="text/javascript" src="https://raw.github.com/mbostock/d3/master/d3.v2.min.js"></script>
+        <script type="text/javascript" src="https://raw.github.com/shaneshifflett/responsible-chartz/master/chartz.js"></script>
+
 
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
@@ -43,8 +70,109 @@
         </script>
         <script>
             d3.csv("data/sv-top-50.csv", function(data, error) {
-                console.log(data);
-                console.log(error);
+                var keyval = [];
+                var options = {
+                    key: function(entry){return entry.key;},
+                    value: function(entry){return entry.value;},
+                    comparator: function(a, b){return a.value - b.value;},
+                    minRange: 5,
+                    maxRange: 40,
+                    strokeColor: 'white',
+                    fillOpacity: .85,
+                    colorKey: function(entry){return entry.color;},
+                    left: 100
+                }
+
+                data.forEach(function(d){
+                    keyval.push({'key': d.company, 'value': parseFloat(d['cash.on.hand'])});
+                });
+
+                var pack = cir.chartz.d3bar("#chart", keyval, options);
+
+                var getYAxe = function(dim, svg, text){
+                    var yscale = d3.scale.linear()
+                            .domain([dim.minY, dim.maxY])
+                            .range([dim.height, dim.bottom]);
+                    var yaxis = cir.chartz.utils.getYAxis(svg, yscale, {
+                        'text': text,
+                        'dy': '.2em',
+                        'transform': 'translate(40,0)',
+                        'textTransform': 'translate(-50, 240)rotate(-90)'
+                    });
+                    return yaxis;
+                };
+
+                var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand');
+
+                pack.svg.selectAll("rect").style('fill-opacity', .5);
+                var text = d3.selectAll("g .bar")
+                    .insert('text', ":first-child").text(function(d){return options.KEY(d);})
+                    .attr("transform", function(d, i){
+                        var selection = pack.svg.selectAll("rect").filter(function(o, idx){
+                            return options.KEY(o) === options.KEY(d);
+                        });
+                        var x = parseFloat(d3.select(selection).node().attr('x')) + 15;
+                        var y = (pack.dimensions.height + pack.dimensions.top) - 3;
+                        return "translate("+x+","+y+")rotate(-90)";
+                    })
+                    .style('opacity', '0')
+                    .style('visibility', 'hidden');
+
+                pack.svg.selectAll("rect").on('mouseover', function(d, i){
+                    d3.select(this).transition().duration(100)
+                    .style("stroke","black")
+                    .style("stroke-width","1");
+                });
+
+                pack.svg.selectAll("rect").on('mouseout', function(d, i){
+                    d3.select(this).transition().duration(100)
+                    .style("stroke","white")
+                    .style("stroke-width","0");
+                    text.transition().duration(1).style('visibility', 'hidden');
+                    text.transition().duration(100)
+                    .style('opacity', '0');
+                });
+
+                pack.svg.selectAll("rect").on('click', function(d, i){
+                    text.filter(function(o, idx){
+                        return idx !== i;
+                    })
+                    .transition().duration(1).style('visibility', 'visible')
+                    .transition().duration(100).style('opacity', '1');
+                });
+
+                $('a').on('click', function(e){
+                    var origTarget = e.srcElement || e.target;
+                    var thisState = $(origTarget).attr('id');
+                    var keyval = [];
+
+                    data.forEach(function(d){
+                        keyval.push({'key': d.company, 'value': parseFloat(d[thisState])});
+                    });
+
+                    var dim = cir.chartz.utils.getLinearDimensions($("#chart"), keyval, options);
+
+                    $('.y-axis').remove()
+                    getYAxe(dim, pack.svg, $(origTarget).text());
+
+                    pack.svg.selectAll("rect")
+                    .transition().duration(1000)
+                    .attr("height", function(d){
+                        var obj = _.find(keyval, function(y){
+                            return options.KEY(d) === options.KEY(y);
+                        });
+                        if(options.VAL(obj) == -1)
+                            return 0;
+                        return dim.yscale(options.VAL(obj));
+                    })
+                    .attr("y", function(d){
+                        var obj = _.find(keyval, function(y){
+                            return options.KEY(d) === options.KEY(y);
+                        });
+                        return dim.top + (dim.height - dim.yscale(options.VAL(obj)));
+                    })
+                    return false;
+                });
             });
         </script>
     </body>
