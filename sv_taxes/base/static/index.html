@@ -170,6 +170,17 @@
                     'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
                     'num.tax.havens': function(d){return d;}
                 };
+                var symbolMap = {
+                    'cash.on.hand': function(d){return "$" + d;},
+                    'cash.foreign.subsidiary': function(d){return "$" + d;},
+                    'pct.offshore': function(d){return d + "%";},
+                    'unrepatriated.foreign.income': function(d){return "$" + d;},
+                    'income.before.taxes': function(d){return "$" + d;},
+                    'effective.tax.rate': function(d){return d;},
+                    'est.us.tax.benefit': function(d){return "$" + d;},
+                    'num.tax.havens': function(d){return d;}
+                };
+                var curState = "cash.on.hand";
                 var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand', formatMap['cash.on.hand']);
 
                 pack.svg.selectAll("rect").style('fill-opacity', .5);
@@ -190,7 +201,7 @@
                     var format =  d3.format(",f");
                     var variables = {
                         'company': options.KEY(d),
-                        'value': format(options.VAL(d))
+                        'value': symbolMap[curState](format(options.VAL(d)))
                     }
                     $("#info-window").show();
                     $("#info-window").html(infoTemplate(variables));
@@ -218,7 +229,7 @@
 
                 $('a').on('click', function(e){
                     var origTarget = e.srcElement || e.target;
-                    var thisState = $(origTarget).attr('id');
+                    var thisState =  curState = $(origTarget).attr('id');
                     var keyval = [];
 
                     data.forEach(function(d){
