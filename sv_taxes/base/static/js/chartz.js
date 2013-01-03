@@ -6,10 +6,22 @@ var isUNDEFINED = function(val){
 var cir = {
     chartz: {
         utils: {
-            /* TODO: When I override my util functions I need to set them back to the original state before function exits */
+            getIEVersion: function(){
+               var rv = -1; // Return value assumes failure.
+               if (navigator.appName == 'Microsoft Internet Explorer'){
+                  var ua = navigator.userAgent;
+                  var re  = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
+                  if (re.exec(ua) != null)
+                     rv = parseFloat( RegExp.$1 );
+               }
+               return rv;
+            },
             KEYCOERCION: function(value){if(!isNaN(parseInt(value))){return parseInt(value);}else{return value;}},
             KEY: function(entry) { return cir.chartz.utils.KEYCOERCION(d3.keys(entry)[0]); },//how I should get ahold of the entry's id 
-            VAL: function(entry) { return entry[d3.keys(entry)[0]]; },//how I should get ahold of the entry's data
+            VAL: function(entry) {
+                //IE8 crap
+                try{return entry[d3.keys(entry)[0]];}catch(err){return -1;}
+            },//how I should get ahold of the entry's data
             comparator: function(a, b) {
                 return cir.chartz.utils.VAL(b) - cir.chartz.utils.VAL(a);
             },
@@ -166,15 +178,6 @@ var cir = {
             });
             paper.bars = tBars;
             paper.dimensions = dim;
-
-            if(!isUNDEFINED(options.axis) && options.axis === true){
-                yscale = d3.scale.linear()
-                        .domain([dim.minY, dim.maxY])
-                        .range([dim.height, dim.bottom]);
-                cir.chartz.utils.getYAxis(d3.select($(container).children()[0]), yscale);
-                cir.chartz.utils.getXAxis(d3.select($(container).children()[0]), dim.xscale, $(container).height() - dim.bottom);
-            }
-
             return paper;
         },
         column: function(container, data, opts){
@@ -195,12 +198,6 @@ var cir = {
             });
             paper.bars = tBars;
             paper.dimensions = dim;
-
-            if(!isUNDEFINED(options.axis) && options.axis === true){
-                cir.chartz.utils.getYAxis(d3.select($(container).children()[0]), dim.yscale);
-                cir.chartz.utils.getXAxis(d3.select($(container).children()[0]), dim.xscale, $(container).height() - dim.bottom);
-            }
-
             return paper;
         },
         d3bar: function(container, data, opts){
@@ -228,18 +225,6 @@ var cir = {
                .attr("width", colWidth)
                .attr("height", function(d){return dim.yscale(options.VAL(d));})
                .style("fill", "#98abc5");
-
-
-            if(!isUNDEFINED(options.yaxis) && options.yaxis === true){
-                yscale = d3.scale.linear()
-                    .domain([dim.minY, dim.maxY])
-                    .range([dim.height, dim.bottom]);
-                cir.chartz.utils.getYAxis(svg, yscale);
-            }
-            if(!isUNDEFINED(options.xaxis) && options.xaxis === true){
-                cir.chartz.utils.getXAxis(d3.select($(container).children()[0]), dim.xscale, $(container).height() - dim.bottom);
-            }
-
             return {'svg':svg, 'options': options, 'dimensions': dim};
         },
         stackedBar: function(container, data, opts){
@@ -619,6 +604,6 @@ var cir = {
             }
             options.KEYCOERCION = oldKeyCoercion;
             return paper;
-        },
+        }
     }
 };

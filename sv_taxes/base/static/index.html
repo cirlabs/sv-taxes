@@ -81,18 +81,18 @@
 
     </head>
     <body>
-        <!--[if lt IE 7]>
+        <!--[if lt IE 9]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
-            <div class="controls">
-                <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
-                <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
-                <a href="#" class="control" id="pct.offshore">Percent offshore</a>
-                <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-                <a href="#" class="control" id="income.before.taxes">Income before taxes</a>
-                <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
-                <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
-            </div>
+        <div class="controls">
+            <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
+            <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
+            <a href="#" class="control" id="pct.offshore">Percent offshore</a>
+            <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
+            <a href="#" class="control" id="income.before.taxes">Income before taxes</a>
+            <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
+            <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
+        </div>
         <div id="container">
             <div id="info-window"></div>
             <div id="chart"></div>
@@ -104,6 +104,7 @@
         <script type="text/javascript" src="js/main.js"></script>
         <script type="text/javascript" src="js/colorbrewer.js"></script>
         <script type="text/javascript" src="js/underscore-min.js"></script>
+        <!--[if lte IE 8]><script src="js/es5-shim.min.js"></script><![endif]-->
         <script type="text/javascript" src="js/d3.v2.min.js"></script>
         <script type="text/javascript" src="js/chartz.js"></script>
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
@@ -126,6 +127,7 @@
                 return x1 + x2;
             }; 
             d3.csv("data/sv-top-50.csv", function(data, error) {
+                console.log('csving')
                 var infoTemplate = _.template($("#info-window-template").html());
                 var keyval = [];
                 var options = {
