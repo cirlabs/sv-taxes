@@ -18,8 +18,10 @@
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
         <style type="text/css">
             #chart{
-                width: 900px;
+                width: 100%;
                 height: 500px;
+                font-size: .8em;
+                position: absolute;
             }
             .y-axis path,
             .y-axis line {
@@ -27,8 +29,51 @@
               stroke: #000;
               shape-rendering: crispEdges;
             }
+            .control {
+                -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+                -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+                box-shadow:inset 0px 1px 0px 0px #ffffff;
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #dfdfdf) );
+                background:-moz-linear-gradient( center top, #ededed 5%, #dfdfdf 100% );
+                filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#dfdfdf');
+                background-color:#ededed;
+                -moz-border-radius:6px;
+                -webkit-border-radius:6px;
+                border-radius:6px;
+                border:1px solid #dcdcdc;
+                display:inline-block;
+                color:#777777;
+                font-family:arial;
+                font-size:15px;
+                font-weight:bold;
+                padding:6px 24px;
+                text-decoration:none;
+                text-shadow:1px 1px 0px #ffffff;
+            }.control:hover {
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+                background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+                filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
+                background-color:#dfdfdf;
+            }.control:active {
+                position:relative;
+                top:1px;
+            }
             body{
-                padding: 25px;
+                font-family: Georgia,Cambria,"Times New Roman",Times,serif;
+                margin: 0;
+            }
+            #info-window{
+                width: 22%;
+                position: absolute;
+                z-index: 10;
+                right: 0;
+                padding: 10px;
+                border: solid 1px #999;
+                background: rgba(255, 255, 255, 0.85);
+            }
+            .controls{
+                position: absolute;
+                bottom: 0;
             }
         </style>
 
@@ -38,18 +83,19 @@
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
 
-        <div id="info-window"></div>
-        <div id="chart"></div>
-        <div class="controls">
-            <a href="#" id="cash.on.hand">Cash on hand</a>
-            <a href="#" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
-            <a href="#" id="pct.offshore">Percent offshore</a>
-            <a href="#" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-            <a href="#" id="income.before.taxes">Income before taxes</a>
-            <a href="#" id="effective.tax.rate">Effective tax rate</a>
-            <a href="#" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
-            <a href="#" id="num.tax.havens">Number of tax havens</a>
-        </div>
+        <div id="container">
+            <div id="info-window"></div>
+            <div id="chart"></div>
+            <div class="controls">
+                <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
+                <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
+                <a href="#" class="control" id="pct.offshore">Percent offshore</a>
+                <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
+                <a href="#" class="control" id="income.before.taxes">Income before taxes</a>
+                <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
+                <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
+                <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
+            </div>
         </div>
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
@@ -57,7 +103,7 @@
         <script type="text/javascript" src="js/main.js"></script>
         <script type="text/javascript" src="https://raw.github.com/mbostock/d3/master/lib/colorbrewer/colorbrewer.js"></script>
         <script type="text/javascript" src="https://raw.github.com/documentcloud/underscore/master/underscore-min.js"></script>
-        <script type="text/javascript" src="https://raw.github.com/mbostock/d3/master/d3.v2.min.js"></script>
+        <script type="text/javascript" src="https://raw.github.com/mbostock/d3/v2.10.3/d3.v2.min.js"></script>
         <script type="text/javascript" src="https://raw.github.com/shaneshifflett/responsible-chartz/master/chartz.js"></script>
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
@@ -90,7 +136,8 @@
                     strokeColor: 'white',
                     fillOpacity: .85,
                     colorKey: function(entry){return entry.color;},
-                    left: 100
+                    left: 100,
+                    barPadding: 5 
                 }
 
                 data.forEach(function(d){
@@ -99,7 +146,7 @@
 
                 var pack = cir.chartz.d3bar("#chart", keyval, options);
 
-                var getYAxe = function(dim, svg, text){
+                var getYAxe = function(dim, svg, text, formatFunction){
                     var yscale = d3.scale.linear()
                             .domain([dim.minY, dim.maxY])
                             .range([dim.height, dim.bottom]);
@@ -107,12 +154,22 @@
                         'text': text,
                         'dy': '.2em',
                         'transform': 'translate(40,0)',
-                        'textTransform': 'translate(-50, 240)rotate(-90)'
+                        'textTransform': 'translate(-50, 240)rotate(-90)',
+                        'tickFormat': formatFunction
                     });
                     return yaxis;
                 };
-
-                var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand');
+                var formatMap = {
+                    'cash.on.hand': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'cash.foreign.sbusidiary': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'pct.offshore': function(d){return d + '%'},
+                    'unrepatriated.foreign.income': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'effective.tax.rate': function(d){return d;},
+                    'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'num.tax.havens': function(d){return d;}
+                };
+                var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand', formatMap['cash.on.hand']);
 
                 pack.svg.selectAll("rect").style('fill-opacity', .5);
                 var text = d3.selectAll("g .bar")
@@ -121,7 +178,7 @@
                         var selection = pack.svg.selectAll("rect").filter(function(o, idx){
                             return options.KEY(o) === options.KEY(d);
                         });
-                        var x = parseFloat(d3.select(selection).node().attr('x')) + 15;
+                        var x = parseFloat(d3.select(selection).node().attr('x')) + 10;
                         var y = (pack.dimensions.height + pack.dimensions.top) - 3;
                         return "translate("+x+","+y+")rotate(-90)";
                     })
@@ -168,8 +225,9 @@
 
                     var dim = cir.chartz.utils.getLinearDimensions($("#chart"), keyval, options);
 
-                    $('.y-axis').remove()
-                    getYAxe(dim, pack.svg, $(origTarget).text());
+                    $('.y-axis').remove();
+                    console.log(formatMap[thisState])
+                    getYAxe(dim, pack.svg, $(origTarget).text(), formatMap[thisState]);
 
                     pack.svg.selectAll("rect")
                     .transition().duration(1000)
