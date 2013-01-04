@@ -17,11 +17,10 @@
         <link rel="css/colorbrewer.css">
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
         <style type="text/css">
-            #chart{
+            .charts{
                 width: 100%;
                 height: 500px;
                 font-size: .8em;
-                position: absolute;
             }
             .y-axis path,
             .y-axis line {
@@ -84,7 +83,6 @@
         <!--[if lt IE 9]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser and many of the features on this page will not appear. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
-        <!--[if gt IE 8]>
             <div class="controls">
                 <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
                 <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
@@ -94,24 +92,19 @@
                 <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
                 <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
             </div>
-        <![endif]-->
-        <!--[if !IE]>-->
-            <div class="controls">
-                <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
-                <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
-                <a href="#" class="control" id="pct.offshore">Percent offshore</a>
-                <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-                <a href="#" class="control" id="income.before.taxes">Income before taxes</a>
-                <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
-                <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
-            </div>
-        <!--[endif]-->
         <div id="container">
             <div id="info-window"></div>
-            <div id="chart"></div>
+            <div id="chart" class="charts"></div>
+            <!--[if lt IE 9]>
+            <div id="chart-1" class="charts"></div>
+            <div id="chart-2" class="charts"></div>
+            <div id="chart-3" class="charts"></div>
+            <div id="chart-4" class="charts"></div>
+            <div id="chart-5" class="charts"></div>
+            <div id="chart-6" class="charts"></div>
+            <![endif]-->
         </div>
-        <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
+        <script type="text/javascript" src="js/vendor/jquery-1.8.3.min.js"></script>
         <script type="text/javascript" src="js/plugins.js"></script>
         <script type="text/javascript" src="js/main.js"></script>
         <script type="text/javascript" src="js/colorbrewer.js"></script>
@@ -153,11 +146,34 @@
                     colorKey: function(entry){return entry.color;},
                     left: 100,
                     barPadding: 5 
-                }
+                };
 
                 data.forEach(function(d){
                     keyval.push({'key': d.company, 'value': parseFloat(d['cash.on.hand'])});
                 });
+
+                var formatMap = {
+                    'cash.on.hand': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'cash.foreign.subsidiary': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'pct.offshore': function(d){return d + '%'},
+                    'unrepatriated.foreign.income': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'effective.tax.rate': function(d){return d;},
+                    'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'num.tax.havens': function(d){return d;}
+                };
+                var symbolMap = {
+                    'cash.on.hand': function(d){return "$" + d;},
+                    'cash.foreign.subsidiary': function(d){return "$" + d;},
+                    'pct.offshore': function(d){return d + "%";},
+                    'unrepatriated.foreign.income': function(d){return "$" + d;},
+                    'income.before.taxes': function(d){return "$" + d;},
+                    'effective.tax.rate': function(d){return d;},
+                    'est.us.tax.benefit': function(d){return "$" + d;},
+                    'num.tax.havens': function(d){return d;}
+                };
+
+                var curState = "cash.on.hand";
 
                 if(cir.chartz.utils.getIEVersion() === -1 || cir.chartz.utils.getIEVersion() >= 9){
                     var pack = cir.chartz.d3bar("#chart", keyval, options);
@@ -175,27 +191,7 @@
                         });
                         return yaxis;
                     };
-                    var formatMap = {
-                        'cash.on.hand': function(d) { return "$" + d / 1000000000 + "B"; },
-                        'cash.foreign.subsidiary': function(d) { return "$" + d / 1000000000 + "B"; },
-                        'pct.offshore': function(d){return d + '%'},
-                        'unrepatriated.foreign.income': function(d) { return "$" + d / 1000000000 + "B"; },
-                        'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
-                        'effective.tax.rate': function(d){return d;},
-                        'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
-                        'num.tax.havens': function(d){return d;}
-                    };
-                    var symbolMap = {
-                        'cash.on.hand': function(d){return "$" + d;},
-                        'cash.foreign.subsidiary': function(d){return "$" + d;},
-                        'pct.offshore': function(d){return d + "%";},
-                        'unrepatriated.foreign.income': function(d){return "$" + d;},
-                        'income.before.taxes': function(d){return "$" + d;},
-                        'effective.tax.rate': function(d){return d;},
-                        'est.us.tax.benefit': function(d){return "$" + d;},
-                        'num.tax.havens': function(d){return d;}
-                    };
-                    var curState = "cash.on.hand";
+
                     var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand', formatMap['cash.on.hand']);
 
                     pack.svg.selectAll("rect").style('fill-opacity', .5);
@@ -277,7 +273,20 @@
                         return false;
                     });
                 }else{
-                    cir.chartz.bar("#chart", keyval, options);
+                    var bars = [cir.chartz.bar("#chart", keyval, options)];
+                    var idx = 0;
+                    _.each(_.keys(formatMap), function(key){
+                        if(idx !== 0){
+                            var id = "#chart-" + idx;
+                            var keyval = [];
+                            data.forEach(function(d){
+                                keyval.push({'key': d.company, 'value': parseFloat(d[key])});
+                            });
+                            var bar = cir.chartz.bar(id, keyval, options)
+                        }
+                        idx++;
+                    });
+                    
                 }
             });
         </script>
