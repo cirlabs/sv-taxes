@@ -162,15 +162,17 @@ var cir = {
         bar: function(container, data, opts){
             var options = cir.chartz.utils.getOptions(opts);
             var dim = cir.chartz.utils.getLinearDimensions($(container), data, options);
+            var colWidth = (dim.width / data.length) - dim.barPadding;
+            var colSpace = dim.width / data.length;
+            var colCenterOffset = dim.barPadding / 2;
 
-            var colWidth = dim.width / data.length;
             var paper = Raphael($(container).get(0), $(container).width(), $(container).height());
 
             tBars = [];
             data.forEach(function(val, i){
                 var ht = dim.yscale(options.VAL(val));
                 var topLeftY = options.top + dim.height - ht;
-                var tBar = paper.rect(dim.left + (colWidth * i), topLeftY, colWidth, ht)
+                var tBar = paper.rect(dim.left + colCenterOffset + (colSpace * i), topLeftY, colWidth, ht)
                 .attr('fill', '#98abc5');
                 tBar.data('key', options.KEY(val));
                 tBar.data('value', options.VAL(val));
