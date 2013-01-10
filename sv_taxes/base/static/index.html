@@ -152,7 +152,7 @@
                 };
 
                 data.forEach(function(d){
-                    keyval.push({'key': d.company, 'value': -1 * parseFloat(d['effective.tax.rate'])});
+                    keyval.push({'key': d.company, 'value': parseFloat(d['effective.tax.rate'])});
                 });
 
                 var formatMap = {
