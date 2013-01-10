@@ -57,12 +57,18 @@
                 position:relative;
                 top:1px;
             }
+            .selected{
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+                background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+                filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
+                background-color:#dfdfdf;
+            }
             body{
                 font-family: Georgia,Cambria,"Times New Roman",Times,serif;
                 margin: 0;
             }
             #info-window{
-                width: 15%;
+                width: 25%;
                 position: absolute;
                 right: 10px;
                 z-index: 10;
@@ -166,15 +172,15 @@
                     'num.tax.havens': function(d){return d;}
                 };
                 var symbolMap = {
-                    'cash.on.hand': function(d){return "$" + d;},
-                    'cash.foreign.subsidiary': function(d){return "$" + d;},
-                    'pct.offshore': function(d){return d + "%";},
-                    'unrepatriated.foreign.income': function(d){return "$" + d;},
-                    'income.before.taxes': function(d){return "$" + d;},
-                    'effective.tax.rate': function(d){return d + "%";},
-                    'est.us.tax.benefit': function(d){return "$" + d;},
-                    'cash.taxes.paid': function(d){return "$" + d;},
-                    'num.tax.havens': function(d){return d;}
+                    'cash.on.hand': function(d){return " has $" + d + " cash on hand";},
+                    'cash.foreign.subsidiary': function(d){return " has $" + d + " in foreign subsidiaries";},
+                    'pct.offshore': function(d){return " has " + d + "%" + " of their cash offshore";},
+                    'unrepatriated.foreign.income': function(d){return " has $" + d + " in unrepatriated foreign income";},
+                    //'income.before.taxes': function(d){return "$" + d;},
+                    'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax rate'): (d + '% tax break'));},
+                    'est.us.tax.benefit': function(d){return ", if taxed, would yield the U.S. an additional $" + d + " in tax revenue";},
+                    //'cash.taxes.paid': function(d){return "$" + d;},
+                    'num.tax.havens': function(d){return " has " + d + " tax havens";}
                 };
 
                 var curState = "effective.tax.rate";
@@ -244,8 +250,13 @@
                         .transition().duration(100).style('opacity', '1');
                     });
 
+                    var lastSelected = null;
                     $('a').on('click', function(e){
                         var origTarget = e.srcElement || e.target;
+                        $(origTarget).addClass('selected');
+                        if(lastSelected !== null)
+                            $(lastSelected).removeClass('selected');
+                        lastSelected = origTarget;
                         var thisState =  curState = $(origTarget).attr('id');
                         var keyval = [];
 
@@ -355,10 +366,7 @@
             });
         </script>
         <script type="text/template" id="info-window-template">
-            <ul>
-                <li><%= company %></li>
-                <li><%= value %></li>
-            </ul>
+            <%= company %><%= value %>.
         </script>
     </body>
 </html>
