@@ -136,7 +136,6 @@
                 return x1 + x2;
             }; 
             d3.csv("data/sv-top-50-updated.csv", function(data, error) {
-                var infoTemplate = _.template($("#info-window-template").html());
                 var keyval = [];
                 var options = {
                     key: function(entry){return entry.key;},
@@ -160,10 +159,10 @@
                     'cash.foreign.subsidiary': function(d) { return "$" + d / 1000000000 + "B"; },
                     'pct.offshore': function(d){return d + '%'},
                     'unrepatriated.foreign.income': function(d) { return "$" + d / 1000000000 + "B"; },
-                    'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
+                    //'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
                     'effective.tax.rate': function(d){return d;},
                     'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
-                    'cash.taxes.paid': function(d) { return "$" + d / 1000000000 + "B"; },
+                    //'cash.taxes.paid': function(d) { return "$" + d / 1000000000 + "B"; },
                     'num.tax.havens': function(d){return d;}
                 };
                 var symbolMap = {
@@ -321,8 +320,6 @@
                                 $("#info-window").show();
                                 $("#info-window").html(infoTemplate(variables));
                             });
-                            var bar = cir.chartz.bar(id, keyval, options);
-                            bargraphs.push(bar);
                             obj.mouseout(function(){
                                 obj.animate({
                                     fill: origColor,
@@ -331,6 +328,7 @@
                                 }, 100);
                             });
                         });
+                        bargraphs.push(bar);
                         idx++;
                     });
                     _.each(bargraphs, function(bargraph){
@@ -353,6 +351,7 @@
                         });
                     });
                 }
+                var infoTemplate = _.template($("#info-window-template").html());
             });
         </script>
         <script type="text/template" id="info-window-template">

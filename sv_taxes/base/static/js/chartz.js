@@ -105,23 +105,19 @@ var cir = {
                         .range([options.bottom, HEIGHT])
                         .nice();
 
-                var height = {
-                    false: function(d){return YY(options.VAL(d));},
-                    true: function(d){
-                        var val = Math.abs(YY(options.VAL(d)) - YY(0));
-                        return val;}
-                }
-                var yPos = {
-                    false: function(d){return options.top + (HEIGHT - YY(options.VAL(d)));},
-                    true: function(d){
-                        var yp = options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d);
-                        return yp;}
-                }
 
+                var height = {
+                    'false': function(d){return YY(options.VAL(d));},
+                    'true': function(d){var val = Math.abs(YY(options.VAL(d)) - YY(0));return val;}
+                };
+                var yPos = {
+                    'false': function(d){return options.top + (HEIGHT - YY(options.VAL(d)));},
+                    'true': function(d){var yp = options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d);return yp;}
+                };
                 var retval = {
                     'zero': y0,
-                    'yPosition': yPos[d3.min(data, options.VAL) < 0],
-                    'heightScaler': height[d3.min(data, options.VAL) < 0],
+                    'yPosition': yPos[(d3.min(data, options.VAL) < 0).toString()],
+                    'heightScaler': height[(d3.min(data, options.VAL) < 0).toString()],
                     'maxY': maxY,
                     'minY': minY,
                     'minX': minX,
