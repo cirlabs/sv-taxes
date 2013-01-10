@@ -135,12 +135,8 @@
                 }
                 return x1 + x2;
             }; 
-<<<<<<< HEAD
             d3.csv("data/sv-top-50-updated.csv", function(data, error) {
                 var infoTemplate = _.template($("#info-window-template").html());
-=======
-            d3.csv("data/sv-top-50.csv", function(data, error) {
->>>>>>> 16b006cccb6631667c5a113897d7a2b8e525599f
                 var keyval = [];
                 var options = {
                     key: function(entry){return entry.key;},
