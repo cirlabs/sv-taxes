@@ -82,6 +82,11 @@ var cir = {
                 var maxY = !isUNDEFINED(options.maxY) ? options.maxY : d3.max(data, options.VAL);
                 var minX = !isUNDEFINED(options.minX) ? options.minX : d3.min(data, options.KEY);
                 var maxX = !isUNDEFINED(options.maxX) ? options.maxX : d3.max(data, options.KEY);
+                var y0 = Math.max(-d3.min(data, options.VAL), d3.max(data, options.VAL));
+                if(minY < 0){
+                    minY= -y0;
+                    maxY = y0;
+                }
 
                 options.top = !isUNDEFINED(options.top) ? options.top : 20;
                 options.right = !isUNDEFINED(options.right) ? options.right : 20;
@@ -93,12 +98,30 @@ var cir = {
                     HEIGHT = !isUNDEFINED(options.height) ? options.height :  container.height() - options.top - options.bottom,
                     XX = d3.scale.linear()
                         .domain([minX, maxX])
-                        .range([options.left, WIDTH]),
+                        .range([options.left, WIDTH])
+                        .nice(),
                     YY = d3.scale.linear()
                         .domain([minY, maxY])
-                        .range([options.bottom, HEIGHT]);
+                        .range([options.bottom, HEIGHT])
+                        .nice();
+
+                var height = {
+                    false: function(d){return YY(options.VAL(d));},
+                    true: function(d){
+                        var val = Math.abs(YY(options.VAL(d)) - YY(0));
+                        return val;}
+                }
+                var yPos = {
+                    false: function(d){return options.top + (HEIGHT - YY(options.VAL(d)));},
+                    true: function(d){
+                        var yp = options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d);
+                        return yp;}
+                }
 
                 var retval = {
+                    'zero': y0,
+                    'yPosition': yPos[d3.min(data, options.VAL) < 0],
+                    'heightScaler': height[d3.min(data, options.VAL) < 0],
                     'maxY': maxY,
                     'minY': minY,
                     'minX': minX,
@@ -162,15 +185,17 @@ var cir = {
         bar: function(container, data, opts){
             var options = cir.chartz.utils.getOptions(opts);
             var dim = cir.chartz.utils.getLinearDimensions($(container), data, options);
+            var colWidth = (dim.width / data.length) - dim.barPadding;
+            var colSpace = dim.width / data.length;
+            var colCenterOffset = dim.barPadding / 2;
 
-            var colWidth = dim.width / data.length;
             var paper = Raphael($(container).get(0), $(container).width(), $(container).height());
 
             tBars = [];
             data.forEach(function(val, i){
-                var ht = dim.yscale(options.VAL(val));
-                var topLeftY = options.top + dim.height - ht;
-                var tBar = paper.rect(dim.left + (colWidth * i), topLeftY, colWidth, ht)
+                var ht = dim.heightScaler(val);
+                var topLeftY = dim.yPosition(val);
+                var tBar = paper.rect(dim.left + colCenterOffset + (colSpace * i), topLeftY, colWidth, ht)
                 .attr('fill', '#98abc5');
                 tBar.data('key', options.KEY(val));
                 tBar.data('value', options.VAL(val));
@@ -221,10 +246,13 @@ var cir = {
                .attr('class', 'bar')
                .append("rect")
                .attr("x", function(d, i){return dim.left + colCenterOffset + (colSpace * i);})
-               .attr("y", function(d){return options.top + (dim.height - dim.yscale(options.VAL(d)));})
+               .attr("y", function(d){
+                return dim.yPosition(d);})
                .attr("width", colWidth)
-               .attr("height", function(d){return dim.yscale(options.VAL(d));})
+               .attr("height", function(d){
+                return dim.heightScaler(d);})
                .style("fill", "#98abc5");
+
             return {'svg':svg, 'options': options, 'dimensions': dim};
         },
         stackedBar: function(container, data, opts){

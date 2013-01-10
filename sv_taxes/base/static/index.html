@@ -62,7 +62,7 @@
                 margin: 0;
             }
             #info-window{
-                width: 22%;
+                width: 15%;
                 position: absolute;
                 right: 10px;
                 z-index: 10;
@@ -70,6 +70,9 @@
                 border: solid 1px #999;
                 background: rgba(255, 255, 255, 0.85);
                 display:none;
+            }
+            #info-window ul{
+                list-style-type: none;
             }
             .controls{
                 bottom: 0;
@@ -88,7 +91,7 @@
                 <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
                 <a href="#" class="control" id="pct.offshore">Percent offshore</a>
                 <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-                <a href="#" class="control" id="income.before.taxes">Income before taxes</a>
+                <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
                 <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
                 <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
             </div>
@@ -132,7 +135,7 @@
                 }
                 return x1 + x2;
             }; 
-            d3.csv("data/sv-top-50.csv", function(data, error) {
+            d3.csv("data/sv-top-50-updated.csv", function(data, error) {
                 var infoTemplate = _.template($("#info-window-template").html());
                 var keyval = [];
                 var options = {
@@ -149,7 +152,7 @@
                 };
 
                 data.forEach(function(d){
-                    keyval.push({'key': d.company, 'value': parseFloat(d['cash.on.hand'])});
+                    keyval.push({'key': d.company, 'value': -1 * parseFloat(d['effective.tax.rate'])});
                 });
 
                 var formatMap = {
@@ -160,6 +163,7 @@
                     'income.before.taxes': function(d) { return "$" + d / 1000000000 + "B"; },
                     'effective.tax.rate': function(d){return d;},
                     'est.us.tax.benefit': function(d) { return "$" + d / 1000000000 + "B"; },
+                    'cash.taxes.paid': function(d) { return "$" + d / 1000000000 + "B"; },
                     'num.tax.havens': function(d){return d;}
                 };
                 var symbolMap = {
@@ -168,12 +172,13 @@
                     'pct.offshore': function(d){return d + "%";},
                     'unrepatriated.foreign.income': function(d){return "$" + d;},
                     'income.before.taxes': function(d){return "$" + d;},
-                    'effective.tax.rate': function(d){return d;},
+                    'effective.tax.rate': function(d){return d + "%";},
                     'est.us.tax.benefit': function(d){return "$" + d;},
+                    'cash.taxes.paid': function(d){return "$" + d;},
                     'num.tax.havens': function(d){return d;}
                 };
 
-                var curState = "cash.on.hand";
+                var curState = "effective.tax.rate";
 
                 if(cir.chartz.utils.getIEVersion() === -1 || cir.chartz.utils.getIEVersion() >= 9){
                     var pack = cir.chartz.d3bar("#chart", keyval, options);
@@ -181,7 +186,8 @@
                     var getYAxe = function(dim, svg, text, formatFunction){
                         var yscale = d3.scale.linear()
                                 .domain([dim.minY, dim.maxY])
-                                .range([dim.height, dim.bottom]);
+                                .range([dim.height, dim.bottom])
+                                .nice();
                         var yaxis = cir.chartz.utils.getYAxis(svg, yscale, {
                             'text': text,
                             'dy': '.2em',
@@ -192,7 +198,7 @@
                         return yaxis;
                     };
 
-                    var yaxe = getYAxe(pack.dimensions, pack.svg, 'cash on hand', formatMap['cash.on.hand']);
+                    var yaxe = getYAxe(pack.dimensions, pack.svg, 'effective tax rate', formatMap['effective.tax.rate']);
 
                     pack.svg.selectAll("rect").style('fill-opacity', .5);
                     var text = d3.selectAll("g .bar")
@@ -232,7 +238,7 @@
 
                     pack.svg.selectAll("rect").on('click', function(d, i){
                         text.filter(function(o, idx){
-                            return idx !== i;
+                            return true;
                         })
                         .transition().duration(1).style('visibility', 'visible')
                         .transition().duration(100).style('opacity', '1');
@@ -250,7 +256,6 @@
                         var dim = cir.chartz.utils.getLinearDimensions($("#chart"), keyval, options);
 
                         $('.y-axis').remove();
-                        console.log(formatMap[thisState])
                         getYAxe(dim, pack.svg, $(origTarget).text(), formatMap[thisState]);
 
                         pack.svg.selectAll("rect")
@@ -260,20 +265,20 @@
                                 return options.KEY(d) === options.KEY(y);
                             });
                             d.value = options.VAL(obj);
-                            if(options.VAL(obj) <= 0.0)
+                            if(options.VAL(d) == 0)
                                 return 0;
-                            return dim.yscale(options.VAL(obj));
+                            return dim.heightScaler(d);
                         })
                         .attr("y", function(d){
                             var obj = _.find(keyval, function(y){
                                 return options.KEY(d) === options.KEY(y);
                             });
-                            return dim.top + (dim.height - dim.yscale(options.VAL(obj)));
+                            return dim.yPosition(obj);
                         })
                         return false;
                     });
                 }else{
-                    var bars = [cir.chartz.bar("#chart", keyval, options)];
+                    var bargraphs = [cir.chartz.bar("#chart", keyval, options)];
                     var idx = 0;
                     _.each(_.keys(formatMap), function(key){
                         if(idx !== 0){
@@ -282,11 +287,30 @@
                             data.forEach(function(d){
                                 keyval.push({'key': d.company, 'value': parseFloat(d[key])});
                             });
-                            var bar = cir.chartz.bar(id, keyval, options)
+                            var bar = cir.chartz.bar(id, keyval, options);
+                            bargraphs.push(bar);
                         }
                         idx++;
                     });
-                    
+                    _.each(bargraphs, function(bargraph){
+                        bargraph.bars.forEach(function(b){
+                            var origColor = b.attr('fill');
+                            b.mouseover(function(){
+                                b.animate({
+                                    fill: 'red',
+                                    stroke: 'black',
+                                    'stroke-width': 1
+                                    }, 100);
+                            });
+                            b.mouseout(function(){
+                                b.animate({
+                                    fill: origColor,
+                                    'stroke': 'black',
+                                    'stroke-width': 1
+                                }, 100);
+                            });
+                        });
+                    });
                 }
             });
         </script>
