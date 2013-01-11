@@ -114,7 +114,7 @@ var cir = {
                 var yPos = {
                     'false': function(d){return options.top + (HEIGHT - YY(options.VAL(d)));},
                     'true': function(d){
-                        return (options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d));}
+                        return (options.VAL(d) > 0 ? YY(0) : YY(0) - height[true](d));}
                 };
 
                 var retval = {
