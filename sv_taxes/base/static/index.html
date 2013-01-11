@@ -58,7 +58,7 @@
                 top:1px;
             }
             .selected{
-                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+                background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #0edfdf), color-stop(1, #ededed) );
                 background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
                 filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
                 background-color:#dfdfdf;
@@ -109,7 +109,7 @@
                 <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
                 <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
                 <a href="#" class="control" id="pct.offshore">Percent offshore</a>
-                <a href="#" class="control" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
+                <a href="#" class="control selected" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
                 <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
                 <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
                 <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
@@ -296,13 +296,10 @@
                         .transition().duration(100).style('opacity', '1');
                     });
 
-                    var lastSelected = null;
                     $('a').on('click', function(e){
+                        $(".control").removeClass('selected');
                         var origTarget = e.srcElement || e.target;
                         $(origTarget).addClass('selected');
-                        if(lastSelected !== null)
-                            $(lastSelected).removeClass('selected');
-                        lastSelected = origTarget;
                         var thisState =  curState = $(origTarget).attr('id');
                         var keyval = [];
 
