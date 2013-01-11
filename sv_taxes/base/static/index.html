@@ -156,8 +156,10 @@
                     barPadding: 5 
                 };
 
+                var curState = "unrepatriated.foreign.income";
+
                 data.forEach(function(d){
-                    keyval.push({'key': d.company, 'value': parseFloat(d['effective.tax.rate'])});
+                    keyval.push({'key': d.company, 'value': parseFloat(d['unrepatriated.foreign.income'])});
                 });
 
                 var formatMap = {
@@ -177,23 +179,29 @@
                     'pct.offshore': function(d){return " has " + d + "%" + " of their cash offshore";},
                     'unrepatriated.foreign.income': function(d){return " has $" + d + " in unrepatriated foreign income";},
                     //'income.before.taxes': function(d){return "$" + d;},
-                    'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax rate'): (d + '% tax break'));},
-                    'est.us.tax.benefit': function(d){return ", if taxed, would yield the U.S. an additional $" + d + " in tax revenue";},
+                    'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax break'): (d + '% tax rate'));},
+                    'est.us.tax.benefit': function(d){return ", if taxed in the U.S. on its foreign earnings, would owe the federal government an additional $" + d + " in tax revenue";},
                     //'cash.taxes.paid': function(d){return "$" + d;},
-                    'num.tax.havens': function(d){return " has " + d + " tax havens";}
+                    'num.tax.havens': function(d){return " reported owning " + d + " subsidiaries in tax havens";}
                 };
 
-                var curState = "effective.tax.rate";
 
                 var infoTemplate = _.template($("#info-window-template").html());
                 if(cir.chartz.utils.getIEVersion() === -1 || cir.chartz.utils.getIEVersion() >= 9){
                     var pack = cir.chartz.d3bar("#chart", keyval, options);
 
                     var getYAxe = function(dim, svg, text, formatFunction){
-                        var yscale = d3.scale.linear()
-                                .domain([dim.minY, dim.maxY])
-                                .range([dim.height, dim.bottom])
-                                .nice();
+                        if(dim.minY < 0){
+                            var yscale = d3.scale.linear()
+                                    .domain([dim.minY, dim.maxY])
+                                    .range([dim.height, 0])
+                                    .nice();
+                        }else{
+                            var yscale = d3.scale.linear()
+                                    .domain([dim.minY, dim.maxY])
+                                    .range([dim.height + dim.top, dim.bottom])
+                                    .nice();
+                        }
                         var yaxis = cir.chartz.utils.getYAxis(svg, yscale, {
                             'text': text,
                             'dy': '.2em',
@@ -204,7 +212,7 @@
                         return yaxis;
                     };
 
-                    var yaxe = getYAxe(pack.dimensions, pack.svg, 'effective tax rate', formatMap['effective.tax.rate']);
+                    var yaxe = getYAxe(pack.dimensions, pack.svg, 'Unrepatriated foreign income', formatMap[curState]);
 
                     pack.svg.selectAll("rect").style('fill-opacity', .5);
                     var text = d3.selectAll("g .bar")

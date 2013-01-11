@@ -86,7 +86,7 @@ var cir = {
                 if(minY < 0){
                     minY= -y0;
                     maxY = y0;
-                }
+                }else{minY = 0;}
 
                 options.top = !isUNDEFINED(options.top) ? options.top : 20;
                 options.right = !isUNDEFINED(options.right) ? options.right : 20;
@@ -102,18 +102,21 @@ var cir = {
                         .nice(),
                     YY = d3.scale.linear()
                         .domain([minY, maxY])
-                        .range([options.bottom, HEIGHT])
+                        .range([0, HEIGHT])
                         .nice();
 
-
                 var height = {
-                    'false': function(d){return YY(options.VAL(d));},
-                    'true': function(d){var val = Math.abs(YY(options.VAL(d)) - YY(0));return val;}
+                    'false': function(d){
+                        return YY(options.VAL(d));},
+                    'true': function(d){
+                        return Math.abs(YY(options.VAL(d)) - YY(0));}
                 };
                 var yPos = {
                     'false': function(d){return options.top + (HEIGHT - YY(options.VAL(d)));},
-                    'true': function(d){var yp = options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d);return yp;}
+                    'true': function(d){
+                        return (options.VAL(d) < 0 ? YY(0) : YY(0) - height[true](d));}
                 };
+
                 var retval = {
                     'zero': y0,
                     'yPosition': yPos[(d3.min(data, options.VAL) < 0).toString()],
@@ -242,11 +245,9 @@ var cir = {
                .attr('class', 'bar')
                .append("rect")
                .attr("x", function(d, i){return dim.left + colCenterOffset + (colSpace * i);})
-               .attr("y", function(d){
-                return dim.yPosition(d);})
+               .attr("y", function(d){return dim.yPosition(d);})
                .attr("width", colWidth)
-               .attr("height", function(d){
-                return dim.heightScaler(d);})
+               .attr("height", function(d){return dim.heightScaler(d);})
                .style("fill", "#98abc5");
 
             return {'svg':svg, 'options': options, 'dimensions': dim};
