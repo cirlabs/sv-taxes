@@ -77,13 +77,26 @@
                 background: rgba(255, 255, 255, 0.85);
                 display:none;
             }
-            #info-window ul{
-                list-style-type: none;
+            .title{
+                width: 100%;
+                position: absolute;
+                z-index: -1;
+                background: rgba(255, 255, 255, 0.85);
+                text-align: center;
+                font-size: 125%;
+            }
+            .title.sub{
+                font-size: 50%;
             }
             .controls{
                 bottom: 0;
                 padding: 20px;
                 text-align: center;
+            }
+            #disclaimer{
+                font-size: 50%;
+                padding-left: 5%;
+                padding-right: 5%;
             }
         </style>
 
@@ -102,6 +115,10 @@
                 <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
             </div>
         <div id="container">
+            <div class="title">
+                <div>Cash and tax status</div>
+                <div class="title sub">50 most profitable, publicly-traded tech companies</div>
+            </div>
             <div id="info-window"></div>
             <div id="chart" class="charts"></div>
             <!--[if lt IE 9]>
@@ -112,6 +129,24 @@
             <div id="chart-5" class="charts"></div>
             <div id="chart-6" class="charts"></div>
             <![endif]-->
+        </div>
+        <div id="disclaimer">
+            <p><b>About the data</b></p>
+            <p>
+            All data was pulled from each companies latest annual financial statement.
+            </p>
+            <p>
+            Every company reports how much cash or cash equivalents it has on hand, but only some disclose how much of that (if any) is held by a foreign subsidiary. Companies must also disclose how much they have accumulated in "unrepatriated foreign earnings," which the company has deemed indefinitely reinvested.
+            </p>
+            <p>
+            The effective tax rate is calculated by taking the cash taxes a company paid divided by income before taxes for a given fiscal year. This figure is different than what a company reports in its tax provision, which includes temporary deferrals on income that went unpaid. These values can vary greatly year to year.
+            </p>
+            <p>
+            Companies must also disclose any "significant" foreign subsidiaries, which is generally defined as any subsidiary worth more than 10 percent of a company's annual income.
+            </p>
+            <p>
+            By citing various exemptions, many of the companies here avoided disclosures of amounts in one or more of the categories featured in this graph. They are not represented as a bar in those cases.
+            </p>
         </div>
         <script type="text/javascript" src="js/vendor/jquery-1.8.3.min.js"></script>
         <script type="text/javascript" src="js/plugins.js"></script>
@@ -130,6 +165,9 @@
             s.parentNode.insertBefore(g,s)}(document,'script'));
         </script>
         <script>
+            window.onresize = function(event) {
+                window.location.reload()
+            }
             var ADD_COMMAS = function(value){
                 nStr = value.toString() + '';
                 x = nStr.split('.');
