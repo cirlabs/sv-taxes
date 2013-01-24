@@ -21,6 +21,26 @@
                 width: 100%;
                 height: 500px;
                 font-size: .8em;
+                padding-top: 25px;
+            }
+            .chart-lbl{
+                font-size: 1em;
+            }
+            @media (max-width: 800px){
+                .chart-lbl{
+                    font-size: .8em;
+                    margin-left: 10px;
+                    position: absolute;
+                }
+                #info-window{
+                    top: 50px;
+                }
+            }
+            @media (max-width: 550px){
+                .chart-lbl{
+                    font-size: 0em;
+                    margin-left: 10px;
+                }
             }
             .y-axis path,
             .y-axis line {
@@ -86,7 +106,7 @@
                 font-size: 125%;
             }
             .title.sub{
-                font-size: 50%;
+                font-size: 80%;
             }
             .controls{
                 bottom: 0;
@@ -94,7 +114,7 @@
                 text-align: center;
             }
             #disclaimer{
-                font-size: 50%;
+                font-size: 75%;
                 padding-left: 5%;
                 padding-right: 5%;
             }
@@ -105,15 +125,6 @@
         <!--[if lt IE 9]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser and many of the features on this page will not work. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
-            <div class="controls">
-                <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
-                <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
-                <a href="#" class="control" id="pct.offshore">Percent offshore</a>
-                <a href="#" class="control selected" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-                <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
-                <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
-                <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
-            </div>
         <div id="container">
             <div class="title">
                 <div>Cash and tax status</div>
@@ -129,6 +140,15 @@
             <div id="chart-5" class="charts"></div>
             <div id="chart-6" class="charts"></div>
             <![endif]-->
+        </div>
+        <div class="controls">
+            <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
+            <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
+            <a href="#" class="control" id="pct.offshore">Percent offshore</a>
+            <a href="#" class="control selected" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
+            <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
+            <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
+            <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
         </div>
         <div id="disclaimer">
             <p><b>About the data</b></p>
@@ -181,6 +201,8 @@
             }; 
             d3.csv("data/sv-top-50-updated.csv", function(data, error) {
                 var keyval = [];
+
+                var clrs = [colorbrewer.BuPu[7][1], colorbrewer.BuPu[7][3], colorbrewer.BuPu[7][5]];
                 var options = {
                     key: function(entry){return entry.key;},
                     value: function(entry){return entry.value;},
@@ -190,6 +212,7 @@
                     strokeColor: 'white',
                     fillOpacity: .85,
                     colorKey: function(entry){return entry.color;},
+                    colorRange: clrs,
                     left: 100,
                     barPadding: 5 
                 };
@@ -198,6 +221,14 @@
 
                 data.forEach(function(d){
                     keyval.push({'key': d.company, 'value': parseFloat(d['unrepatriated.foreign.income'])});
+                });
+
+                var min = d3.min(keyval, options.value);
+                var max = d3.max(keyval, options.value);
+                var colorDomain = ['low', 'med', 'high'];
+                var z = d3.scale.quantize().domain([min, max]).range(colorDomain.reverse());
+                _.each(keyval, function(key){
+                    key.color = z(key.value);
                 });
 
                 var formatMap = {
@@ -217,7 +248,7 @@
                     'pct.offshore': function(d){return " has " + d + "%" + " of their cash offshore";},
                     'unrepatriated.foreign.income': function(d){return " has $" + d + " in unrepatriated foreign income";},
                     //'income.before.taxes': function(d){return "$" + d;},
-                    'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax break'): (d + '% tax rate'));},
+                    'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax rate'): (d + '% tax break'));},
                     'est.us.tax.benefit': function(d){return ", if taxed in the U.S. on its foreign earnings, would owe the federal government an additional $" + d + " in tax revenue";},
                     //'cash.taxes.paid': function(d){return "$" + d;},
                     'num.tax.havens': function(d){return " reported owning " + d + " subsidiaries in tax havens";}
@@ -259,12 +290,12 @@
                             var selection = pack.svg.selectAll("rect").filter(function(o, idx){
                                 return options.KEY(o) === options.KEY(d);
                             });
-                            var x = parseFloat(d3.select(selection).node().attr('x')) + 10;
+                            var offset = $('body').width() <= 800 ? ($('body').width() <= 650 ? 4 : 7) : 10;
+                            var x = parseFloat(d3.select(selection).node().attr('x')) + offset;
                             var y = (pack.dimensions.height + pack.dimensions.top) - 3;
                             return "translate("+x+","+y+")rotate(-90)";
                         })
-                        .style('opacity', '0')
-                        .style('visibility', 'hidden');
+                        .attr('class', 'chart-lbl')
 
                     pack.svg.selectAll("rect").on('mouseover', function(d, i){
                         var format =  d3.format(",f");
@@ -283,20 +314,10 @@
                         d3.select(this).transition().duration(100)
                         .style("stroke","white")
                         .style("stroke-width","0");
-                        text.transition().duration(1).style('visibility', 'hidden');
-                        text.transition().duration(100)
-                        .style('opacity', '0');
-                    });
-
-                    pack.svg.selectAll("rect").on('click', function(d, i){
-                        text.filter(function(o, idx){
-                            return true;
-                        })
-                        .transition().duration(1).style('visibility', 'visible')
-                        .transition().duration(100).style('opacity', '1');
                     });
 
                     $('a').on('click', function(e){
+                        $("#info-window").html('');
                         $(".control").removeClass('selected');
                         var origTarget = e.srcElement || e.target;
                         $(origTarget).addClass('selected');

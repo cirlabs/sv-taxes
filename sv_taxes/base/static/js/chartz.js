@@ -231,6 +231,12 @@ var cir = {
             var colSpace = dim.width / data.length;
             var colCenterOffset = dim.barPadding / 2;
 
+            var colorKey = !isUNDEFINED(options.colorKey) ? options.colorKey : options.KEY;
+            var colorDomain = !isUNDEFINED(options.colorDomain) ? options.colorDomain : cir.chartz.utils.mapColorDomain(data, options);
+            var colorRange = !isUNDEFINED(options.colorRange) ? options.colorRange : colorbrewer.YlGnBu[3];
+            var color = d3.scale.ordinal().range(colorRange).domain(colorDomain);
+
+
             var w = dim.width + dim.left + dim.right;
             var h = dim.height + dim.top + dim.bottom;
 
@@ -248,7 +254,8 @@ var cir = {
                .attr("y", function(d){return dim.yPosition(d);})
                .attr("width", colWidth)
                .attr("height", function(d){return dim.heightScaler(d);})
-               .style("fill", "#98abc5");
+               .style("fill", function(d, i) { 
+                    return color(colorKey(d)); })
 
             return {'svg':svg, 'options': options, 'dimensions': dim};
         },
