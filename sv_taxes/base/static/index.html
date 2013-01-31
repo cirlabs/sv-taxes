@@ -327,7 +327,7 @@
                         .attr('class', 'chart-lbl')
 
                     d3.selectAll('g .bar text').on('mouseover', function(d){
-                        d3.select(this).style('font-weight', 'bold');
+                        d3.selectAll('g .bar text').style('font-weight', 'normal');
                         var format =  d3.format(",f");
                         var variables = {
                             'company': options.KEY(d),
@@ -335,7 +335,8 @@
                         }
                         $("#info-window").show();
                         $("#info-window").html(infoTemplate(variables));
-                        d3.selectAll('rect').transition().duration(100)
+                        d3.select(this).transition().duration(50).style('font-weight', 'bold');
+                        d3.selectAll('rect').transition().duration(50)
                         .style("stroke", function(o){
                             if(o.key === d.key)
                                 return 'black';
@@ -346,11 +347,8 @@
                             return '0';
                         });
                     });
-                    d3.selectAll('g .bar text').on('mouseout', function(d){
-                        d3.select(this).style('font-weight', 'normal');
-                    }); 
                     pack.svg.selectAll("rect").on('mouseover', function(d, i){
-                        d3.selectAll('g .bar text')
+                        d3.selectAll('g .bar text').transition().duration(50)
                         .style('font-weight', function(o){
                             if(o.key === d.key)
                                 return 'bold';
@@ -363,18 +361,20 @@
                         }
                         $("#info-window").show();
                         $("#info-window").html(infoTemplate(variables));
-                        d3.select(this).transition().duration(100)
+                        d3.select(this).transition().duration(50)
                         .style("stroke","black")
                         .style("stroke-width","1");
                     });
-
+                    d3.selectAll('g .bar text').on('mouseout', function(d){
+                        d3.select(this).transition().duration(50).style('font-weight', 'normal');
+                        //d3.selectAll('rect').transition().duration(50).style('stroke-width', '0');
+                    }); 
                     pack.svg.selectAll("rect").on('mouseout', function(d, i){
-                        d3.select(this).style('font-weight', 'normal');
-                        d3.select(this).transition().duration(100)
+                        d3.select(this).transition().duration(50).style('font-weight', 'normal');
+                        d3.select(this).transition().duration(50)
                         .style("stroke","white")
                         .style("stroke-width","0");
                     });
-
                     $("a[class='control']").on('click', function(e){
                         $("#info-window").hide();
                         $(".control").removeClass('selected');
