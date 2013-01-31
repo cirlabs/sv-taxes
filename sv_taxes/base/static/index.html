@@ -327,6 +327,7 @@
                         .attr('class', 'chart-lbl')
 
                     d3.selectAll('g .bar text').on('mouseover', function(d){
+                        d3.select(this).style('font-weight', 'bold');
                         var format =  d3.format(",f");
                         var variables = {
                             'company': options.KEY(d),
@@ -345,7 +346,16 @@
                             return '0';
                         });
                     });
+                    d3.selectAll('g .bar text').on('mouseout', function(d){
+                        d3.select(this).style('font-weight', 'normal');
+                    }); 
                     pack.svg.selectAll("rect").on('mouseover', function(d, i){
+                        d3.selectAll('g .bar text')
+                        .style('font-weight', function(o){
+                            if(o.key === d.key)
+                                return 'bold';
+                            return 'normal';
+                        });
                         var format =  d3.format(",f");
                         var variables = {
                             'company': options.KEY(d),
@@ -359,6 +369,7 @@
                     });
 
                     pack.svg.selectAll("rect").on('mouseout', function(d, i){
+                        d3.select(this).style('font-weight', 'normal');
                         d3.select(this).transition().duration(100)
                         .style("stroke","white")
                         .style("stroke-width","0");
