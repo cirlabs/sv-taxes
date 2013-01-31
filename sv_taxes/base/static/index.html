@@ -95,7 +95,6 @@
                 padding: 10px;
                 border: solid 1px #999;
                 background: rgba(255, 255, 255, 0.85);
-                display:none;
             }
             .title{
                 width: 100%;
@@ -108,6 +107,14 @@
             .title.sub{
                 font-size: 80%;
             }
+            .title.sub.note{
+                font-size: 65%;
+                top: 50px;
+            }
+            .title.sub.note.num{
+                top:65px;
+                font-size: 50%;
+            }
             .controls{
                 bottom: 0;
                 padding: 20px;
@@ -118,6 +125,10 @@
                 padding-left: 5%;
                 padding-right: 5%;
             }
+            #howto-button{
+                position: absolute;
+                padding: 5px 0px 0px 40px;
+            }
         </style>
 
     </head>
@@ -127,10 +138,16 @@
         <![endif]-->
         <div id="container">
             <div class="title">
-                <div>Cash and tax status</div>
-                <div class="title sub">50 most profitable, publicly-traded tech companies</div>
+                <div>Top 50 Silicon Valley tech companies</div>
+                <div class="title sub">Offshore assests help firms reduce taxes</div>
+                <div class="title sub note" id="graph-title"></div>
+                <div class="title sub note num" id="graph-exempted"></div>
             </div>
-            <div id="info-window"></div>
+            <div id="info-window">
+            </div>
+            <a id="howto-button" href="#">
+                <img src="img/info.png">
+            </a>
             <div id="chart" class="charts"></div>
             <!--[if lt IE 9]>
             <div id="chart-1" class="charts"></div>
@@ -142,31 +159,35 @@
             <![endif]-->
         </div>
         <div class="controls">
-            <a href="#" class="control" id="cash.on.hand">Cash on hand</a>
-            <a href="#" class="control" id="cash.foreign.subsidiary">Cash in foreign subsidiary</a>
-            <a href="#" class="control" id="pct.offshore">Percent offshore</a>
-            <a href="#" class="control selected" id="unrepatriated.foreign.income">Unrepatried foreign income</a>
-            <a href="#" class="control" id="effective.tax.rate">Effective tax rate</a>
-            <a href="#" class="control" id="est.us.tax.benefit">Estimated U.S. tax benefit</a>
-            <a href="#" class="control" id="num.tax.havens">Number of tax havens</a>
+            <a href="#" class="control" id="cash.on.hand">Total cash reported</a>
+            <!--<a href="#" class="control" id="cash.foreign.subsidiary">Cash held by foreign companies</a>-->
+            <a href="#" class="control" id="pct.offshore">Percent of cash held by foreign subsidiaries</a>
+            <a href="#" class="control" id="unrepatriated.foreign.income">Assets invested offshore</a>
+            <a href="#" class="control" id="est.us.tax.benefit">Reported tax benefit</a>
+            <a href="#" class="control" id="num.tax.havens">Tax haven subsidiaries</a>
         </div>
         <div id="disclaimer">
             <p><b>About the data</b></p>
             <p>
-            All data was pulled from each companies latest annual financial statement.
+            The data in this graph was taken from the annual financial statements each company filed in 2012 with the Securities and Exchange Commission; the statements cover each company’s previous fiscal year.
             </p>
             <p>
-            Every company reports how much cash or cash equivalents it has on hand, but only some disclose how much of that (if any) is held by a foreign subsidiary. Companies must also disclose how much they have accumulated in "unrepatriated foreign earnings," which the company has deemed indefinitely reinvested.
+            All 50 companies reported how much cash they have on hand, as well as how much of their assets, if any, they have deemed “permanently reinvested” outside the United States. Three reported no foreign holdings. While the companies are required to report how much they would owe in federal taxes if they transferred the money to the U.S., only 17 provided that estimate.
             </p>
             <p>
-            The effective tax rate is calculated by taking the cash taxes a company paid divided by income before taxes for a given fiscal year. This figure is different than what a company reports in its tax provision, which includes temporary deferrals on income that went unpaid. These values can vary greatly year to year.
+            Companies are required to report ownership of any "significant" foreign subsidiary, which is generally defined as being worth more than 10 percent of the parent company's value.
             </p>
             <p>
-            Companies must also disclose any "significant" foreign subsidiaries, which is generally defined as any subsidiary worth more than 10 percent of a company's annual income.
+            By citing various exemptions, many of the 50 companies avoided disclosing data for one or more categories featured in this graph.  
             </p>
-            <p>
-            By citing various exemptions, many of the companies here avoided disclosures of amounts in one or more of the categories featured in this graph. They are not represented as a bar in those cases.
-            </p>
+        </div>
+        <div id="howto-text" style="display:none;">
+            <b>TO USE THIS GRAPHIC</b>
+            Click on the tabs to sort by category, such as overseas assets or foreign subsidiaries.
+            The companies are arranged by market capitalization, with the largest—Apple—
+            on the left, and the smallest—Netgear—on the right. For details, hover over the
+            company name and a box will appear in the upper right corner. Some companies do
+            not report data in every category; in those cases no bar appears.
         </div>
         <script type="text/javascript" src="js/vendor/jquery-1.8.3.min.js"></script>
         <script type="text/javascript" src="js/plugins.js"></script>
@@ -198,11 +219,15 @@
                     x1 = x1.replace(rgx, '$1' + ',' + '$2');
                 }
                 return x1 + x2;
-            }; 
+            };
+            $("#info-window").html($("#howto-text").html());
+            $("a[id='howto-button']").on('click', function(){
+                $("#info-window").html($("#howto-text").html());
+            });
             d3.csv("data/sv-top-50-updated.csv", function(data, error) {
                 var keyval = [];
 
-                var clrs = [colorbrewer.BuPu[7][1], colorbrewer.BuPu[7][3], colorbrewer.BuPu[7][5]];
+                var clrs = [colorbrewer.Blues[7][1], colorbrewer.Blues[7][3], colorbrewer.Blues[7][5]];
                 var options = {
                     key: function(entry){return entry.key;},
                     value: function(entry){return entry.value;},
@@ -214,7 +239,7 @@
                     colorKey: function(entry){return entry.color;},
                     colorRange: clrs,
                     left: 100,
-                    barPadding: 5 
+                    barPadding: 3 
                 };
 
                 var curState = "unrepatriated.foreign.income";
@@ -225,7 +250,7 @@
 
                 var min = d3.min(keyval, options.value);
                 var max = d3.max(keyval, options.value);
-                var colorDomain = ['low', 'med', 'high'];
+                var colorDomain = ['low'];
                 var z = d3.scale.quantize().domain([min, max]).range(colorDomain.reverse());
                 _.each(keyval, function(key){
                     key.color = z(key.value);
@@ -245,13 +270,13 @@
                 var symbolMap = {
                     'cash.on.hand': function(d){return " has $" + d + " cash on hand";},
                     'cash.foreign.subsidiary': function(d){return " has $" + d + " in foreign subsidiaries";},
-                    'pct.offshore': function(d){return " has " + d + "%" + " of their cash offshore";},
-                    'unrepatriated.foreign.income': function(d){return " has $" + d + " in unrepatriated foreign income";},
+                    'pct.offshore': function(d){return " has " + d + "%" + " of its cash held by foreign companies";},
+                    'unrepatriated.foreign.income': function(d){return " has $" + d + " in accumulated foreign earnings";},
                     //'income.before.taxes': function(d){return "$" + d;},
                     'effective.tax.rate': function(d){return " has a " + (d < 0 ? (-1 * d  + '% tax rate'): (d + '% tax break'));},
                     'est.us.tax.benefit': function(d){return ", if taxed in the U.S. on its foreign earnings, would owe the federal government an additional $" + d + " in tax revenue";},
                     //'cash.taxes.paid': function(d){return "$" + d;},
-                    'num.tax.havens': function(d){return " reported owning " + d + " subsidiaries in tax havens";}
+                    'num.tax.havens': function(d){return " reported owning " + d + " companies in tax havens";}
                 };
 
 
@@ -280,8 +305,12 @@
                         });
                         return yaxis;
                     };
+                    var empty = _.filter(keyval, function(obj){return obj.value <= 0.0;});
 
-                    var yaxe = getYAxe(pack.dimensions, pack.svg, 'Unrepatriated foreign income', formatMap[curState]);
+                    $("#graph-title").html('Current selection: Assets invested offshore');
+                    $("#graph-exempted").html('* ' + empty.length + ' companies reported no foreign investments')
+
+                    var yaxe = getYAxe(pack.dimensions, pack.svg, "Assets invested offshore", formatMap[curState]);
 
                     pack.svg.selectAll("rect").style('fill-opacity', .5);
                     var text = d3.selectAll("g .bar")
@@ -290,13 +319,32 @@
                             var selection = pack.svg.selectAll("rect").filter(function(o, idx){
                                 return options.KEY(o) === options.KEY(d);
                             });
-                            var offset = $('body').width() <= 800 ? ($('body').width() <= 650 ? 4 : 7) : 10;
+                            var offset = $('body').width() <= 800 ? ($('body').width() <= 650 ? 4 : 7) : 12;
                             var x = parseFloat(d3.select(selection).node().attr('x')) + offset;
                             var y = (pack.dimensions.height + pack.dimensions.top) - 3;
                             return "translate("+x+","+y+")rotate(-90)";
                         })
                         .attr('class', 'chart-lbl')
 
+                    d3.selectAll('g .bar text').on('mouseover', function(d){
+                        var format =  d3.format(",f");
+                        var variables = {
+                            'company': options.KEY(d),
+                            'value': symbolMap[curState](format(options.VAL(d)))
+                        }
+                        $("#info-window").show();
+                        $("#info-window").html(infoTemplate(variables));
+                        d3.selectAll('rect').transition().duration(100)
+                        .style("stroke", function(o){
+                            if(o.key === d.key)
+                                return 'black';
+                            return 'white';
+                        }).style('stroke-width', function(o){
+                            if(o.key === d.key)
+                                return '1';
+                            return '0';
+                        });
+                    });
                     pack.svg.selectAll("rect").on('mouseover', function(d, i){
                         var format =  d3.format(",f");
                         var variables = {
@@ -316,8 +364,8 @@
                         .style("stroke-width","0");
                     });
 
-                    $('a').on('click', function(e){
-                        $("#info-window").html('');
+                    $("a[class='control']").on('click', function(e){
+                        $("#info-window").hide();
                         $(".control").removeClass('selected');
                         var origTarget = e.srcElement || e.target;
                         $(origTarget).addClass('selected');
@@ -328,10 +376,15 @@
                             keyval.push({'key': d.company, 'value': parseFloat(d[thisState])});
                         });
 
+                        var empty = _.filter(keyval, function(obj){return obj.value <= 0.0;});
+
                         var dim = cir.chartz.utils.getLinearDimensions($("#chart"), keyval, options);
 
                         $('.y-axis').remove();
                         getYAxe(dim, pack.svg, $(origTarget).text(), formatMap[thisState]);
+
+                        $("#graph-title").html('Current selection: ' + $(origTarget).text());
+                        $("#graph-exempted").html('* ' + empty.length + ' companies did not disclose')
 
                         pack.svg.selectAll("rect")
                         .transition().duration(1000)
@@ -352,6 +405,7 @@
                         })
                         return false;
                     });
+                    $($("a[class='control']")[2]).addClass('selected');
                 }else{
                     var idx = 0;
                     var bargraphs = [];
