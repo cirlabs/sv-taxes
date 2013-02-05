@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="css/main.css">
         <link rel="css/colorbrewer.css">
+        <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
         <style type="text/css">
             .charts{
@@ -84,7 +85,7 @@
                 background-color:#dfdfdf;
             }
             body{
-                font-family: Georgia,Cambria,"Times New Roman",Times,serif;
+                font-family: 'Lato', sans-serif;
                 margin: 0;
             }
             #info-window{
@@ -184,10 +185,10 @@
         <div id="howto-text" style="display:none;">
             <b>TO USE THIS GRAPHIC</b>
             Click on the tabs to sort by category, such as overseas assets or foreign subsidiaries.
-            The companies are arranged by market capitalization, with the largest—Apple—
-            on the left, and the smallest—Netgear—on the right. For details, hover over the
-            company name and a box will appear in the upper right corner. Some companies do
-            not report data in every category; in those cases no bar appears.
+            The companies are arranged by market capitalization, with the largest -- Apple --
+            on the left and the smallest -- Netgear -- on the right. For details, hover over the
+            company name and a box will appear in the upper-right corner. Some companies do
+            not report data in every category; in those cases, no bar appears.
         </div>
         <script type="text/javascript" src="js/vendor/jquery-1.8.3.min.js"></script>
         <script type="text/javascript" src="js/plugins.js"></script>
@@ -312,6 +313,18 @@
 
                     var yaxe = getYAxe(pack.dimensions, pack.svg, "Assets invested offshore", formatMap[curState]);
 
+                    var updateInfo = function(d){
+                        var format =  d3.format(",f");
+                        var variables = {
+                            'company': options.KEY(d),
+                            'value': symbolMap[curState](format(options.VAL(d)))
+                        }
+                        if(options.VAL(d) <= 0.0)
+                            variables.value = ' did not report'
+                        $("#info-window").show();
+                        $("#info-window").html(infoTemplate(variables));
+                    }
+
                     pack.svg.selectAll("rect").style('fill-opacity', .5);
                     var text = d3.selectAll("g .bar")
                         .insert('text', ":first-child").text(function(d){return options.KEY(d);})
@@ -328,13 +341,7 @@
 
                     d3.selectAll('g .bar text').on('mouseover', function(d){
                         d3.selectAll('g .bar text').style('font-weight', 'normal');
-                        var format =  d3.format(",f");
-                        var variables = {
-                            'company': options.KEY(d),
-                            'value': symbolMap[curState](format(options.VAL(d)))
-                        }
-                        $("#info-window").show();
-                        $("#info-window").html(infoTemplate(variables));
+                        updateInfo(d);
                         d3.select(this).transition().duration(50).style('font-weight', 'bold');
                         d3.selectAll('rect').transition().duration(50)
                         .style("stroke", function(o){
@@ -354,13 +361,7 @@
                                 return 'bold';
                             return 'normal';
                         });
-                        var format =  d3.format(",f");
-                        var variables = {
-                            'company': options.KEY(d),
-                            'value': symbolMap[curState](format(options.VAL(d)))
-                        }
-                        $("#info-window").show();
-                        $("#info-window").html(infoTemplate(variables));
+                        updateInfo(d);
                         d3.select(this).transition().duration(50)
                         .style("stroke","black")
                         .style("stroke-width","1");
